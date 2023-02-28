@@ -18,6 +18,7 @@ class BaseDatosAlumnos(contexto: Context): SQLiteOpenHelper(contexto,DATABASE,nu
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "nombre TEXT NOT NULL, " +
                 "asignatura TEXT NOT NULL, "+
+                "imagen Blob NOT NULL, "+
                 "email TEXT NOT NULL UNIQUE)"
 
         bd?.execSQL(q)
@@ -35,6 +36,7 @@ class BaseDatosAlumnos(contexto: Context): SQLiteOpenHelper(contexto,DATABASE,nu
         val valores = ContentValues().apply {
             put("NOMBRE", profe.nombre)
             put ("EMAIL", profe.email)
+            put ("IMAGEN", profe.email)
             put ("ASIGNATURA",profe.asig)
         }
         val cod=conexion.insert(TABLA, null, valores)
@@ -54,6 +56,7 @@ class BaseDatosAlumnos(contexto: Context): SQLiteOpenHelper(contexto,DATABASE,nu
                         cursor.getInt(cursor.getColumnIndex("id")),
                         cursor.getString(cursor.getColumnIndex("nombre")),
                         cursor.getString(cursor.getColumnIndex("asignatura")),
+                        cursor.getBlob(cursor.getColumnIndex("imagen")),
                         cursor.getString(cursor.getColumnIndex("email"))
                     )
                     lista.add(usuario)
@@ -89,11 +92,12 @@ class BaseDatosAlumnos(contexto: Context): SQLiteOpenHelper(contexto,DATABASE,nu
         conexion.close()
     }
     fun update(usuario: Usuarios): Int{
-        //val q="UPDATE $TABLA SET nombre='${usuario.nombre}', email='${usuario.email}' where id=${usuario.id}"
+
         val conexion=this.writableDatabase
         val valores = ContentValues().apply {
             put("NOMBRE", usuario.nombre)
             put("ASIGNATURA",usuario.asig)
+            put ("IMAGEN", usuario.email)
             put("EMAIL", usuario.email)
         }
         val update = conexion.update(TABLA, valores, "id=?", arrayOf(usuario.id.toString()))

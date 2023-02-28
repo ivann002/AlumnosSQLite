@@ -2,11 +2,13 @@ package com.example.alumnossqlite
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
 import com.example.alumnossqlite.databinding.ActivityAddUpdateBinding
+import java.io.ByteArrayOutputStream
 
 class AddUpdateActivity : AppCompatActivity() {
     lateinit var binding: ActivityAddUpdateBinding
@@ -25,6 +27,7 @@ class AddUpdateActivity : AppCompatActivity() {
         cogerDatos()
         setListeners()
         binding.btnFoto.setOnClickListener { camara() }
+        binding.btnGaleria.setOnClickListener { galeria() }
     }
 
     private fun camara(){
@@ -33,12 +36,24 @@ class AddUpdateActivity : AppCompatActivity() {
             startActivityForResult(intent, 1)
         }
     }
+
+    private fun galeria(){
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        if(intent.resolveActivity(packageManager) != null){
+            startActivityForResult(intent, 2)
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1 && resultCode == RESULT_OK) {
             // Aquí puedes obtener la imagen capturada por la cámara.
             val extras = data?.extras
             val imageBitmap = extras?.get("data") as Bitmap
+            binding.imageView.setImageBitmap(imageBitmap)
+        }else if (requestCode == 2 && resultCode == RESULT_OK) {
+            val imageUri = data?.data
+            val imageBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
             binding.imageView.setImageBitmap(imageBitmap)
         }
     }
@@ -66,6 +81,15 @@ class AddUpdateActivity : AppCompatActivity() {
         nombre=binding.etNombre.text.toString().trim()
         asignatura = binding.etAsignatura.text.toString().trim()//Aqui esto falta
         email=binding.etEmail.text.toString().trim()
+
+        if(binding.imageView.drawable != null){
+
+            val drawable = binding.imageView.drawable
+            val bitmap = (drawable as BitmapDrawable).bitmap
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val byteArray = stream.toByteArray()
+
         if(nombre.length<3){
             binding.etNombre.setError("El campo nombre debe tener al menos 3 caracteres")
             return
@@ -83,7 +107,7 @@ class AddUpdateActivity : AppCompatActivity() {
             return
         }
         if(!editar){
-            val usuario=Usuarios(1, nombre,asignatura,email)
+            val usuario=Usuarios(1, nombre,asignatura, byteArray, email)
             if(conexion.crear(usuario)>-1){
                 finish()
             }
@@ -91,7 +115,7 @@ class AddUpdateActivity : AppCompatActivity() {
                 Toast.makeText(this, "NO se pudo guardar el registro!!!", Toast.LENGTH_SHORT).show()
             }
         }else{
-            val usuario=Usuarios(id, nombre,asignatura, email)
+            val usuario=Usuarios(id, nombre,asignatura, byteArray, email)
             if(conexion.update(usuario)>-1){
                 finish()
             }
@@ -99,5 +123,6 @@ class AddUpdateActivity : AppCompatActivity() {
                 Toast.makeText(this, "NO se pudo editar el registro!!!", Toast.LENGTH_SHORT).show()
             }
         }
+    }
     }
 }
